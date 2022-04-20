@@ -62,6 +62,7 @@ urlpatterns = [
 
     # 系统的网络设置
     url(r'^get/all/network_card_information$', views.all_network_card_information, name='network_card_information'),  # 获取网卡配置信息
-    url(r'^add/network_card$', views.add_network_card_config, name='add_network_card_config'),  # 获取网卡配置信息
+    url(r'^add/network_card$', views.add_network_card_config, name='add_network_card_config'),  # 获取网卡配置信息shish
+
 ]
 
