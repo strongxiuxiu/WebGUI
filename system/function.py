@@ -2,6 +2,7 @@ from public_function.tool import SystemNetwork
 
 
 def back_children(res, sm_id, whole=None):
+    # whole 代表了需要的数据结构不同
     # 回溯法之递归循环返回树结构
     children_list = []
     for i in res:

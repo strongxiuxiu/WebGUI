@@ -30,7 +30,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
 from django.db import transaction
 
-from system import models, forms
+from system import models, forms, function
 from public_function import tool, web_conf, downold_file, time_dispose
 from public_function.format_data import SuccessDataFormat, ErrorDataFormat, ExceptionDataFormat
 from public_function.storage_api import RequestApi, GetIP
@@ -117,7 +117,6 @@ class Login(View):
         cache.delete(token)
         user = auth.authenticate(request, username=username, password=password)  # 验证用户名密码
         if user:
-
             try:
                 su = models.SysUser.objects.get(userId=user.id)
             except LookupError:
@@ -134,11 +133,9 @@ class Login(View):
             token = uuid.uuid1()  # 生成一份UUID
             cache.set(token, username, 60 * 60 * 24)  # 将用户名和token存储起来
             cache.set(username, user.id, 60 * 60 * 24)  # 将用户名和用户id存储起来
-
             request.session['username'] = username
             request.session['id'] = user.id
             request.session['token'] = token
-
             login(request, user)
             result = SuccessDataFormat(
                 ch_message=web_conf.sys_code["800000"],
@@ -213,46 +210,6 @@ def get_user_info(request):
     return JsonResponse(result, safe=False)
 
 
-def back_children(res, sm_id):
-    # 回溯法之递归循环返回树结构
-    children_list = []
-    for i in res:
-        children_dict = {}
-        if sm_id == i["parent_id"]:
-            children_dict['orderNum'] = i['orderNum']
-            children_dict['id'] = i['id']
-            children_dict['name'] = i['perms']
-            children_dict['title'] = i['name']
-            children_dict['component'] = i['component']
-            children_dict['icon'] = i['icon']
-            children_dict['path'] = i['path']
-            children_list.append(children_dict)
-            children_dict["children"] = back_children(res, i['id'])
-    return children_list
-
-
-def back_children_list(res, sm_id):
-    # 回溯法之递归循环返回树结构
-    children_list = []
-    for i in res:
-        children_dict = {}
-        if sm_id == i["parent_id"]:
-            children_dict['perms'] = i['perms']
-            children_dict['orderNum'] = i['orderNum']
-            children_dict['id'] = i['id']
-            children_dict['name'] = i['name']
-            children_dict['component'] = i['component']
-            children_dict['icon'] = i['icon']
-            children_dict['path'] = i['path']
-            children_dict['type'] = i['type']
-            children_dict['created'] = i['created']
-            children_dict['updated'] = i['updated']
-            children_dict['statu'] = i['statu']
-            children_list.append(children_dict)
-            children_dict["children"] = back_children_list(res, i['id'])
-    return children_list
-
-
 # class GetMenuNav(View):
 # @params(web_conf.access_code['修改菜单'], web_conf.log_info_type['1001'], '查看了所有标的物信息', 3)
 def get_menu_nav(request):
@@ -277,7 +234,7 @@ def get_menu_nav(request):
                 sm_dict['component'] = sm['component']
                 sm_dict['icon'] = sm['icon']
                 sm_dict['path'] = sm['path']
-                sm_dict["children"] = back_children(res, sm["id"])
+                sm_dict["children"] = function.back_children(res, sm["id"])
                 nav.append(sm_dict)
         authority.insert(0, web_conf.role_joint + username)  # 前端界面构建的数据，需要的插入表头的特定样式
     result = SuccessDataFormat(
@@ -748,7 +705,7 @@ def menu_list(request):
                 sm_dict['created'] = sm['created']
                 sm_dict['updated'] = sm['updated']
                 sm_dict['statu'] = sm['statu']
-                sm_dict["children"] = back_children_list(all_res, sm["id"])
+                sm_dict["children"] = function.back_children(all_res, sm["id"], whole=True)
                 nav.append(sm_dict)
         result = SuccessDataFormat(
             ch_message=web_conf.sys_code["210016"], data=nav, code=1).result()
@@ -1306,7 +1263,7 @@ def all_network_card_information(request):
                      item=web_conf.default_storage_port)  # # 先调用网卡信息的合集，拿出所有的网卡信息
     if api.get_public_api()["code"] == 1:
         api.url = "/api/network/net_nmcli_connection"
-        print(api.get_public_api(),333)
+        print(api.get_public_api(), 333)
 
         for i in api.get_public_api()["message"]:
             i["name"]
