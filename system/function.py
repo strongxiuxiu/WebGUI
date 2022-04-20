@@ -1,6 +1,43 @@
 from public_function.tool import SystemNetwork
 
 
+def back_children(res, sm_id, whole=None):
+    # 回溯法之递归循环返回树结构
+    children_list = []
+    for i in res:
+        children_dict = {}
+        if sm_id == i["parent_id"]:
+            if not whole:
+                children_dict['orderNum'] = i['orderNum']
+                children_dict['id'] = i['id']
+                children_dict['name'] = i['perms']
+                children_dict['title'] = i['name']
+                children_dict['component'] = i['component']
+                children_dict['icon'] = i['icon']
+                children_dict['path'] = i['path']
+                children_list.append(children_dict)
+                children_dict["children"] = back_children(res, i['id'])
+            else:
+                children_dict['perms'] = i['perms']
+                children_dict['orderNum'] = i['orderNum']
+                children_dict['id'] = i['id']
+                children_dict['name'] = i['name']
+                children_dict['component'] = i['component']
+                children_dict['icon'] = i['icon']
+                children_dict['path'] = i['path']
+                children_dict['type'] = i['type']
+                children_dict['created'] = i['created']
+                children_dict['updated'] = i['updated']
+                children_dict['statu'] = i['statu']
+                children_list.append(children_dict)
+                children_dict["children"] = back_children(res, i['id'], whole=True)
+    return children_list
+
+
+# def back_children_list(self,res, sm_id):
+#     # 回溯法之递归循环返回树结构
+
+
 def get_key():
     print(SystemNetwork().net_io_counters)
     key_info = SystemNetwork().net_io_counters.keys()  # 获取网卡名称
@@ -13,33 +50,3 @@ def get_key():
         sent.setdefault(key, SystemNetwork().net_io_counters(pernic=True).get(key).bytes_sent)  # 各网卡发送的字节数
 
     return key_info, recv, sent
-
-
-print(get_key())
-# def get_rate(func):
-#     import time
-#
-#     key_info, old_recv, old_sent = func()  # 上一秒收集的数据
-#
-#     time.sleep(1)
-#
-#     key_info, now_recv, now_sent = func()  # 当前所收集的数据
-#
-#     net_in = {}
-#     net_out = {}
-#
-#     for key in key_info:
-#         net_in.setdefault(key, (now_recv.get(key) - old_recv.get(key)) / 1024)  # 每秒接收速率
-#         net_out.setdefault(key, (now_sent.get(key) - old_sent.get(key)) / 1024)  # 每秒发送速率
-#
-#     return key_info, net_in, net_out
-#
-#
-# while 1:
-#     try:
-#         key_info, net_in, net_out = get_rate(get_key)
-#
-#         for key in key_info:
-#             print('%s\nInput:\t %-5sKB/s\nOutput:\t %-5sKB/s\n' % (key, net_in.get(key), net_out.get(key)))
-#     except KeyboardInterrupt:
-#         exit()
